@@ -112,21 +112,23 @@ module SMTPServer
               # Accept the connection
               new_io = io.accept
               increment_prometheus_counter :postal_smtp_server_connections_total
+              # Get the client's IP address and strip `::ffff:` for consistency.
+              client_ip_address = new_io.remote_address.ip_address.sub(/\A::ffff:/, "")
               if Postal::Config.smtp_server.proxy_protocol?
                 # If we are using the haproxy proxy protocol, we will be sent the
                 # client's IP later. Delay the welcome process.
                 client = Client.new(nil)
                 if Postal::Config.smtp_server.log_connections?
-                  client.logger&.debug "Connection opened from #{new_io.remote_address.ip_address}"
+                  client.logger&.debug "Connection opened from #{client_ip_address}"
                 end
               else
                 # We're not using the proxy protocol so we already know the client's IP
-                client = Client.new(new_io.remote_address.ip_address)
+                client = Client.new(client_ip_address)
                 if Postal::Config.smtp_server.log_connections?
-                  client.logger&.debug "Connection opened from #{new_io.remote_address.ip_address}"
+                  client.logger&.debug "Connection opened from #{client_ip_address}"
                 end
                 # We know who the client is, welcome them.
-                client.logger&.debug "Client identified as #{new_io.remote_address.ip_address}"
+                client.logger&.debug "Client identified as #{client_ip_address}"
                 new_io.print("220 #{Postal::Config.postal.smtp_hostname} ESMTP Postal/#{client.trace_id}")
               end
               # Register the client and its socket with nio4r
@@ -205,7 +207,7 @@ module SMTPServer
 
                   result = [result] unless result.is_a?(Array)
                   result.compact.each do |iline|
-                    client.logger&.debug "\e[34m=> #{iline.strip}"
+                    client.logger&.debug "\e[34m=> #{iline.strip}\e[0m"
                     begin
                       io.write(iline.to_s + "\r\n")
                       io.flush
