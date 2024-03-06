@@ -29,7 +29,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v4
         with:
           push: true
@@ -51,7 +51,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker-compose pull
         env:
           POSTAL_IMAGE: ghcr.io/jmdunsing/postal:ci-${{ github.sha }}
@@ -72,7 +72,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - id: tag
         run: |
           TAG="${GITHUB_REF#refs/heads/}"
@@ -103,7 +103,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v4
         with:
           push: true
