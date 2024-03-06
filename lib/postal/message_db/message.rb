@@ -500,14 +500,10 @@ module Postal
         return nil unless bounce
 
         other_message_ids = raw_message.scan(/\X-Postal-MsgID:\s*([a-z0-9]+)/i).flatten
-        uname, domain = rcpt_to.split('@', 2)
-        uname, other_message_token = uname.split('+', 2)
-        if !other_message_ids.empty?
-          database.messages(where: { token: other_message_ids })
-        elsif other_message_token == token
-          database.messages(where: { token: other_message_token })
-        else
+        if other_message_ids.empty?
           []
+        else
+          database.messages(where: { token: other_message_ids })
         end
       end
 
