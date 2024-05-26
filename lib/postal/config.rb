@@ -13,13 +13,15 @@ require "dotenv"
 require "klogger"
 
 require_relative "error"
-require_relative "version"
 require_relative "config_schema"
 require_relative "legacy_config_source"
+require_relative "signer"
 
 module Postal
 
   class << self
+
+    attr_writer :current_process_type
 
     # Return the path to the config file
     #
@@ -37,30 +39,36 @@ module Postal
       Dotenv.load(".env")
       sources << Konfig::Sources::Environment.new(ENV)
 
+      silence_config_messages = ENV.fetch("SILENCE_POSTAL_CONFIG_MESSAGES", "false") == "true"
+
       # If a config file exists, we need to load that. Config files can
       # either be legacy (v1) or new (v2). Any file without a 'version'
       # key is a legacy file whereas new-style config files will include
       # the 'version: 2' key/value.
       if File.file?(config_file_path)
-        puts "Loading config from #{config_file_path}"
+        unless silence_config_messages
+          warn "Loading config from #{config_file_path}"
+        end
 
         config_file = File.read(config_file_path)
         yaml = YAML.safe_load(config_file)
         config_version = yaml["version"] || 1
         case config_version
         when 1
-          puts "WARNING: Using legacy config file format. Upgrade your postal.yml to use"
-          puts "version 2 of the Postal configuration or configure using environment"
-          puts "variables. See https://postalserver.io/config-v2 for details."
+          unless silence_config_messages
+            warn "WARNING: Using legacy config file format. Upgrade your postal.yml to use"
+            warn "version 2 of the Postal configuration or configure using environment"
+            warn "variables. See https://postalserver.io/config-v2 for details."
+          end
           sources << LegacyConfigSource.new(yaml)
         when 2
           sources << Konfig::Sources::YAML.new(config_file)
         else
           raise "Invalid version specified in Postal config file. Must be 1 or 2."
         end
-      else
-        puts "No configuration file found at #{config_file_path}"
-        puts "Only using environment variables for configuration"
+      elsif !silence_config_messages
+        warn "No configuration file found at #{config_file_path}"
+        warn "Only using environment variables for configuration"
       end
 
       # Build configuration with the provided sources.
@@ -98,12 +106,15 @@ module Postal
       "#{locker_name} #{suffix}"
     end
 
-    def signing_key
-      @signing_key ||= OpenSSL::PKey::RSA.new(File.read(Config.postal.signing_key_path))
+    def signer
+      @signer ||= begin
+        key = OpenSSL::PKey::RSA.new(File.read(Config.postal.signing_key_path))
+        Signer.new(key)
+      end
     end
 
     def rp_dkim_dns_record
-      public_key = signing_key.public_key.to_s.gsub(/-+[A-Z ]+-+\n/, "").gsub(/\n/, "")
+      public_key = signer.private_key.public_key.to_s.gsub(/-+[A-Z ]+-+\n/, "").gsub(/\n/, "")
       "v=DKIM1; t=s; h=sha256; p=#{public_key};"
     end
 
@@ -119,11 +130,54 @@ module Postal
           notifier.notify!(short_message: short_message, **{
             facility: Config.gelf.facility,
             _environment: Config.rails.environment,
-            _version: Postal::VERSION.to_s,
+            _version: Postal.version.to_s,
             _group_ids: group_ids.join(" ")
           }.merge(payload.transform_keys { |k| "_#{k}".to_sym }.transform_values(&:to_s)))
         end
       end
+    end
+
+    # Change the connection pool size to the given size.
+    #
+    # @param new_size [Integer]
+    # @return [void]
+    def change_database_connection_pool_size(new_size)
+      ActiveRecord::Base.connection_pool.disconnect!
+
+      config = ActiveRecord::Base.configurations
+                                 .configs_for(env_name: Rails.env)
+                                 .first
+                                 .configuration_hash
+
+      ActiveRecord::Base.establish_connection(config.merge(pool: new_size))
+    end
+
+    # Return the branch name which created this release
+    #
+    # @return [String, nil]
+    def branch
+      return @branch if instance_variable_defined?("@branch")
+
+      @branch ||= read_version_file("BRANCH")
+    end
+
+    # Return the version
+    #
+    # @return [String, nil]
+    def version
+      return @version if instance_variable_defined?("@version")
+
+      @version ||= read_version_file("VERSION") || "0.0.0"
+    end
+
+    private
+
+    def read_version_file(file)
+      path = Rails.root.join(file)
+      return unless File.exist?(path)
+
+      value = File.read(path).strip
+      value.empty? ? nil : value
     end
 
   end

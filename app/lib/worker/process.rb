@@ -26,7 +26,7 @@ module Worker
     # @return [Array<Class>]
     JOBS = [
       Jobs::ProcessQueuedMessagesJob,
-      Jobs::ProcessWebhookRequestsJob
+      Jobs::ProcessWebhookRequestsJob,
     ].freeze
 
     # An array of tasks that should be processed
@@ -40,11 +40,14 @@ module Worker
       ProcessMessageRetentionScheduledTask,
       PruneSuppressionListsScheduledTask,
       PruneWebhookRequestsScheduledTask,
-      SendNotificationsScheduledTask
+      SendNotificationsScheduledTask,
+      TidyQueuedMessagesTask,
     ].freeze
 
     # @param [Integer] thread_count The number of worker threads to run in this process
-    def initialize(thread_count: 2, work_sleep_time: 5, task_sleep_time: 60)
+    def initialize(thread_count: Postal::Config.worker.threads,
+                   work_sleep_time: 5,
+                   task_sleep_time: 60)
       @thread_count = thread_count
       @exit_pipe_read, @exit_pipe_write = IO.pipe
       @work_sleep_time = work_sleep_time
@@ -57,6 +60,7 @@ module Worker
     def run
       logger.tagged(component: "worker") do
         setup_traps
+        ensure_connection_pool_size_is_suitable
         start_work_threads
         start_tasks_thread
         wait_for_threads
@@ -91,6 +95,23 @@ module Worker
     # @return [Boolean]
     def shutdown_after_wait?(wait_time)
       @exit_pipe_read.wait_readable(wait_time) ? true : false
+    end
+
+    # Ensure that the connection pool is big enough for the number of threads
+    # configured.
+    #
+    # @return [void]
+    def ensure_connection_pool_size_is_suitable
+      current_pool_size = ActiveRecord::Base.connection_pool.size
+      desired_pool_size = @thread_count + 3
+
+      return if current_pool_size >= desired_pool_size
+
+      logger.warn "number of worker threads (#{@thread_count}) is more  " \
+                  "than the db connection pool size (#{current_pool_size}+3), " \
+                  "increasing connection pool size to #{desired_pool_size}"
+
+      Postal.change_database_connection_pool_size(desired_pool_size)
     end
 
     # Wait for all threads to complete
@@ -287,6 +308,9 @@ module Worker
       register_prometheus_histogram :postal_worker_task_runtime,
                                     docstring: "The time taken to process tasks",
                                     labels: [:task]
+
+      register_prometheus_histogram :postal_message_queue_latency,
+                                    docstring: "The length of time between a message being queued and being dequeued"
     end
 
   end

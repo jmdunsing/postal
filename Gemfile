@@ -8,17 +8,16 @@ gem "chronic"
 gem "domain_name"
 gem "dotenv"
 gem "dynamic_form"
-gem "encrypto_signo"
 gem "execjs", "~> 2.7", "< 2.8"
 gem "gelf"
 gem "haml"
 gem "hashie"
 gem "highline", require: false
+gem "jwt"
 gem "kaminari"
 gem "klogger-logger"
-gem "konfig-config", "~> 2.0"
+gem "konfig-config", "~> 3.0"
 gem "mail"
-gem "moonrope"
 gem "mysql2"
 gem "nifty-utils"
 gem "nilify_blanks"
@@ -31,6 +30,13 @@ gem "secure_headers"
 gem "sentry-rails"
 gem "turbolinks", "~> 5"
 gem "webrick"
+
+group :oidc do
+  # These are gems which are needed for OpenID connect. They are only required by the application
+  # when OIDC is enabled in the Postal configuration.
+  gem "omniauth_openid_connect"
+  gem "omniauth-rails_csrf_protection"
+end
 
 group :development, :assets do
   gem "coffee-rails", "~> 5.0"

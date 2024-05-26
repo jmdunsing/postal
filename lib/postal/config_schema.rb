@@ -68,7 +68,8 @@ module Postal
 
       string :signing_key_path do
         description "Path to the private key used for signing"
-        default "config/postal/signing.key"
+        default "$config-file-root/signing.key"
+        transform { |v| Postal.substitute_config_file_root(v) }
       end
 
       string :smtp_relays do
@@ -89,6 +90,16 @@ module Postal
         array
         description "An array of IP addresses to trust for proxying requests to Postal (in addition to localhost addresses)"
         transform { |ip| IPAddr.new(ip) }
+      end
+
+      integer :queued_message_lock_stale_days do
+        description "The number of days after which to consider a lock as stale. Messages with stale locks will be removed and not retried."
+        default 1
+      end
+
+      boolean :batch_queued_messages do
+        description "When enabled queued messages will be de-queued in batches based on their destination"
+        default true
       end
     end
 
@@ -118,6 +129,11 @@ module Postal
       string :default_health_server_bind_address do
         description "The default bind address for the worker health server to listen on"
         default "127.0.0.1"
+      end
+
+      integer :threads do
+        description "The number of threads to execute within each worker"
+        default 2
       end
     end
 
@@ -253,12 +269,14 @@ module Postal
 
       string :tls_certificate_path do
         description "The path to the SMTP server's TLS certificate"
-        default "config/postal/smtp.cert"
+        default "$config-file-root/smtp.cert"
+        transform { |v| Postal.substitute_config_file_root(v) }
       end
 
       string :tls_private_key_path do
         description "The path to the SMTP server's TLS private key"
-        default "config/postal/smtp.key"
+        default "$config-file-root/smtp.key"
+        transform { |v| Postal.substitute_config_file_root(v) }
       end
 
       string :tls_ciphers do
@@ -271,7 +289,7 @@ module Postal
       end
 
       boolean :proxy_protocol do
-        description "Enable proxy protocol for use behind some load balancers"
+        description "Enable proxy protocol for use behind some load balancers (supports proxy protocol v1 only)"
         default false
       end
 
@@ -500,6 +518,87 @@ module Postal
         default 2
       end
     end
+
+    group :oidc do
+      boolean :enabled do
+        description "Enable OIDC authentication"
+        default false
+      end
+
+      boolean :local_authentication_enabled do
+        description "When enabled, users with passwords will still be able to login locally. If disable, only OpenID Connect will be available."
+        default true
+      end
+
+      string :name do
+        description "The name of the OIDC provider as shown in the UI"
+        default "OIDC Provider"
+      end
+
+      string :issuer do
+        description "The OIDC issuer URL"
+      end
+
+      string :identifier do
+        description "The client ID for OIDC"
+      end
+
+      string :secret do
+        description "The client secret for OIDC"
+      end
+
+      string :scopes do
+        description "Scopes to request from the OIDC server."
+        array
+        default "openid,email"
+      end
+
+      string :uid_field do
+        description "The field to use to determine the user's UID"
+        default "sub"
+      end
+
+      string :email_address_field do
+        description "The field to use to determine the user's email address"
+        default "email"
+      end
+
+      string :name_field do
+        description "The field to use to determine the user's name"
+        default "name"
+      end
+
+      boolean :discovery do
+        description "Enable discovery to determine endpoints from .well-known/openid-configuration from the Issuer"
+        default true
+      end
+
+      string :authorization_endpoint do
+        description "The authorize endpoint on the authorization server (only used when discovery is false)"
+      end
+
+      string :token_endpoint do
+        description "The token endpoint on the authorization server (only used when discovery is false)"
+      end
+
+      string :userinfo_endpoint do
+        description "The user info endpoint on the authorization server (only used when discovery is false)"
+      end
+
+      string :jwks_uri do
+        description "The JWKS endpoint on the authorization server (only used when discovery is false)"
+      end
+    end
+  end
+
+  class << self
+
+    def substitute_config_file_root(string)
+      return if string.nil?
+
+      string.gsub(/\$config-file-root/i, File.dirname(Postal.config_file_path))
+    end
+
   end
 
 end

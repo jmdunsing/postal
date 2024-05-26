@@ -3,6 +3,8 @@
 module MessageDequeuer
   class InitialProcessor < Base
 
+    include HasPrometheusMetrics
+
     attr_accessor :send_result
 
     def process
@@ -10,6 +12,7 @@ module MessageDequeuer
         logger.info "starting message unqueue"
         begin
           catch_stops do
+            increment_dequeue_metric
             check_message_exists
             check_message_is_ready
             find_other_messages_for_batch
@@ -17,7 +20,7 @@ module MessageDequeuer
             # Process the original message and then all of those
             # found for batching.
             process_message(@queued_message)
-            @other_messages.each { |message| process_message(message) }
+            @other_messages&.each { |message| process_message(message) }
           end
         ensure
           @state.finished
@@ -28,9 +31,16 @@ module MessageDequeuer
 
     private
 
+    def increment_dequeue_metric
+      time_in_queue = Time.now.to_f - @queued_message.created_at.to_f
+      log "queue latency is #{time_in_queue}s"
+      observe_prometheus_histogram :postal_message_queue_latency,
+                                   time_in_queue
+    end
+
     def check_message_exists
-      @queued_message.message
-    rescue Postal::MessageDB::Message::NotFound
+      return if @queued_message.message
+
       log "unqueue because backend message has been removed."
       remove_from_queue
       stop_processing
@@ -45,6 +55,8 @@ module MessageDequeuer
     end
 
     def find_other_messages_for_batch
+      return unless Postal::Config.postal.batch_queued_messages?
+
       @other_messages = @queued_message.batchable_messages(100)
       log "found #{@other_messages.size} associated messages to process at the same time", batch_key: @queued_message.batch_key
     rescue StandardError

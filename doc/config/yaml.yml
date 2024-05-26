@@ -24,11 +24,15 @@ postal:
   # Append a Resend-Sender header to all outgoing e-mails
   use_resent_sender_header: true
   # Path to the private key used for signing
-  signing_key_path: config/postal/signing.key
+  signing_key_path: $config-file-root/signing.key
   # An array of SMTP relays in the format of smtp://host:port
   smtp_relays: []
   # An array of IP addresses to trust for proxying requests to Postal (in addition to localhost addresses)
   trusted_proxies: []
+  # The number of days after which to consider a lock as stale. Messages with stale locks will be removed and not retried.
+  queued_message_lock_stale_days: 1
+  # When enabled queued messages will be de-queued in batches based on their destination
+  batch_queued_messages: true
 
 web_server:
   # The default port the web server should listen on unless overriden by the PORT environment variable
@@ -43,6 +47,8 @@ worker:
   default_health_server_port: 9090
   # The default bind address for the worker health server to listen on
   default_health_server_bind_address: 127.0.0.1
+  # The number of threads to execute within each worker
+  threads: 2
 
 main_db:
   # Hostname for the main MariaDB server
@@ -96,7 +102,7 @@ smtp_server:
   # The default port the SMTP server should listen on unless overriden by the PORT environment variable
   default_port: 25
   # The default bind address the SMTP server should listen on unless overriden by the BIND_ADDRESS environment variable
-  default_bind_address: 127.0.0.1
+  default_bind_address: ::
   # The default port for the SMTP server health server to listen on
   default_health_server_port: 9091
   # The default bind address for the SMTP server health server to listen on
@@ -104,14 +110,14 @@ smtp_server:
   # Enable TLS for the SMTP server (requires certificate)
   tls_enabled: false
   # The path to the SMTP server's TLS certificate
-  tls_certificate_path: config/postal/smtp.cert
+  tls_certificate_path: $config-file-root/smtp.cert
   # The path to the SMTP server's TLS private key
-  tls_private_key_path: config/postal/smtp.key
+  tls_private_key_path: $config-file-root/smtp.key
   # Override ciphers to use for SSL
   tls_ciphers: 
   # The SSL versions which are supported
   ssl_version: SSLv23
-  # Enable proxy protocol for use behind some load balancers
+  # Enable proxy protocol for use behind some load balancers (supports proxy protocol v1 only)
   proxy_protocol: false
   # Enable connection logging
   log_connections: false
@@ -217,3 +223,36 @@ migration_waiter:
   attempts: 120
   # The number of seconds to wait between each migration check
   sleep_time: 2
+
+oidc:
+  # Enable OIDC authentication
+  enabled: false
+  # When enabled, users with passwords will still be able to login locally. If disable, only OpenID Connect will be available.
+  local_authentication_enabled: true
+  # The name of the OIDC provider as shown in the UI
+  name: OIDC Provider
+  # The OIDC issuer URL
+  issuer: 
+  # The client ID for OIDC
+  identifier: 
+  # The client secret for OIDC
+  secret: 
+  # Scopes to request from the OIDC server.
+  scopes:
+    - openid,email
+  # The field to use to determine the user's UID
+  uid_field: sub
+  # The field to use to determine the user's email address
+  email_address_field: email
+  # The field to use to determine the user's name
+  name_field: name
+  # Enable discovery to determine endpoints from .well-known/openid-configuration from the Issuer
+  discovery: true
+  # The authorize endpoint on the authorization server (only used when discovery is false)
+  authorization_endpoint: 
+  # The token endpoint on the authorization server (only used when discovery is false)
+  token_endpoint: 
+  # The user info endpoint on the authorization server (only used when discovery is false)
+  userinfo_endpoint: 
+  # The JWKS endpoint on the authorization server (only used when discovery is false)
+  jwks_uri: 

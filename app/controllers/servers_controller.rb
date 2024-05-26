@@ -45,8 +45,16 @@ class ServersController < ApplicationController
     extra_params = [:spam_threshold, :spam_failure_threshold, :postmaster_address]
 
     if current_user.admin?
-      extra_params += [:send_limit, :allow_sender, :privacy_mode, :log_smtp_data, :outbound_spam_threshold,
-                       :message_retention_days, :raw_message_retention_days, :raw_message_retention_size]
+      extra_params += [
+        :send_limit,
+        :allow_sender,
+        :privacy_mode,
+        :log_smtp_data,
+        :outbound_spam_threshold,
+        :message_retention_days,
+        :raw_message_retention_days,
+        :raw_message_retention_size,
+      ]
     end
 
     if @server.update(safe_params(*extra_params))
@@ -57,23 +65,21 @@ class ServersController < ApplicationController
   end
 
   def destroy
-    unless current_user.authenticate(params[:password])
+    if params[:confirm_text].blank? || params[:confirm_text].downcase.strip != @server.name.downcase.strip
       respond_to do |wants|
-        wants.html do
-          redirect_to [:delete, organization, @server], alert: "The password you entered was not valid. Please check and try again."
-        end
-        wants.json do
-          render json: { alert: "The password you entere was invalid. Please check and try again" }
-        end
+        alert_text = "The text you entered does not match the server name. Please check and try again."
+        wants.html { redirect_to organization_delete_path(@organization), alert: alert_text }
+        wants.json { render json: { alert: alert_text } }
       end
       return
     end
+
     @server.soft_destroy
     redirect_to_with_json organization_root_path(organization), notice: "#{@server.name} has been deleted successfully"
   end
 
   def queue
-    @messages = @server.queued_messages.order(id: :desc).page(params[:page])
+    @messages = @server.queued_messages.order(id: :desc).page(params[:page]).includes(:ip_address)
     @messages_with_message = @messages.include_message
   end
 

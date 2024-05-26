@@ -17,7 +17,9 @@ module Postal
       # by the schema itself. Otherwise, we might see a value returned that
       # looks correct but is actually the default rather than the value from
       # config file.
-      allow_any_instance_of(Konfig::SchemaAttribute).to receive(:default).and_return(nil)
+      allow_any_instance_of(Konfig::SchemaAttribute).to receive(:default) do |a|
+        a.array? ? [] : nil
+      end
     end
 
     let(:source) { described_class.new(SOURCE_CONFIG) }
@@ -71,7 +73,7 @@ module Postal
       it "returns a value for postal.smtp_relays" do
         expect(config.postal.smtp_relays).to eq [
           { "host" => "1.2.3.4", "port" => 25, "ssl_mode" => "Auto" },
-          { "host" => "2.2.2.2", "port" => 2525, "ssl_mode" => "None" }
+          { "host" => "2.2.2.2", "port" => 2525, "ssl_mode" => "None" },
         ]
       end
     end

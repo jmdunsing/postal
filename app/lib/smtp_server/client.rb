@@ -116,18 +116,19 @@ module SMTPServer
     private
 
     def proxy(data)
+      # inet-protocol, client-ip, proxy-ip, client-port, proxy-port
       if m = data.match(/\APROXY (.+) (.+) (.+) (.+) (.+)\z/)
         @ip_address = m[2]
         check_ip_address
         @state = :welcome
         logger&.debug "\e[35mClient identified as #{@ip_address}\e[0m"
         increment_command_count("PROXY")
-        "220 #{Postal::Config.postal.smtp_hostname} ESMTP Postal/#{id}"
-      else
-        @finished = true
-        increment_error_count("proxy-error")
-        "502 Proxy Error"
+        return "220 #{Postal::Config.postal.smtp_hostname} ESMTP Postal/#{trace_id}"
       end
+
+      @finished = true
+      increment_error_count("proxy-error")
+      "502 Proxy Error"
     end
 
     def quit
@@ -155,7 +156,7 @@ module SMTPServer
       [
         "250-My capabilities are",
         Postal::Config.smtp_server.tls_enabled? && !@tls ? "250-STARTTLS" : nil,
-        "250 AUTH CRAM-MD5 PLAIN LOGIN"
+        "250 AUTH CRAM-MD5 PLAIN LOGIN",
       ].compact
     end
 
@@ -252,7 +253,7 @@ module SMTPServer
         org_permlink, server_permalink = username.split(/[\/_]/, 2)
         server = ::Server.includes(:organization).where(organizations: { permalink: org_permlink }, permalink: server_permalink).first
         if server.nil?
-          logger&.warn "Authentication failure for #{@ip_address}"
+          logger&.warn "Authentication failure for #{@ip_address} (no server found matching #{username})"
           increment_error_count("invalid-credentials")
           next "535 Denied"
         end
@@ -264,12 +265,13 @@ module SMTPServer
 
           @credential = credential
           @credential.use
+          logger&.debug "Authenticated with with credential #{credential.id}"
           grant = "235 Granted for #{credential.server.organization.permalink}/#{credential.server.permalink}"
           break
         end
 
         if grant.nil?
-          logger&.warn "Authentication failure for #{@ip_address}"
+          logger&.warn "Authentication failure for #{@ip_address} (invalid credential)"
           increment_error_count("invalid-credentials")
           next "535 Denied"
         end

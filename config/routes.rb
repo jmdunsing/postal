@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
+  # Legacy API Routes
+  match "/api/v1/send/message" => "legacy_api/send#message", via: [:get, :post, :patch, :put]
+  match "/api/v1/send/raw" => "legacy_api/send#raw", via: [:get, :post, :patch, :put]
+  match "/api/v1/messages/message" => "legacy_api/messages#message", via: [:get, :post, :patch, :put]
+  match "/api/v1/messages/deliveries" => "legacy_api/messages#deliveries", via: [:get, :post, :patch, :put]
+
   scope "org/:org_permalink", as: "organization" do
     resources :domains, only: [:index, :new, :create, :destroy] do
       match :verify, on: :member, via: [:get, :post]
@@ -84,6 +90,12 @@ Rails.application.routes.draw do
   delete "logout" => "sessions#destroy"
   match "login/reset" => "sessions#begin_password_reset", :via => [:get, :post]
   match "login/reset/:token" => "sessions#finish_password_reset", :via => [:get, :post]
+
+  if Postal::Config.oidc.enabled?
+    get "auth/oidc/callback", to: "sessions#create_from_oidc"
+  end
+
+  get ".well-known/jwks.json" => "well_known#jwks"
 
   get "ip" => "sessions#ip"
 
