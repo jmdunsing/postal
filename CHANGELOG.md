@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.1](https://github.com/jmdunsing/postal/compare/3.1.0...3.1.1) (2024-05-26)
+
+
+### Miscellaneous Chores
+
+* Update ci.yml ([6de46af](https://github.com/jmdunsing/postal/commit/6de46af3fbdc6599edff519125dcbf070be6cf3c))
+
 ## [3.1.0](https://github.com/jmdunsing/postal/compare/3.0.0...3.1.0) (2024-05-26)
 
 
