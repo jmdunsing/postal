@@ -1,5 +1,74 @@
 # Changelog
 
+## [3.1.0](https://github.com/jmdunsing/postal/compare/3.0.0...3.1.0) (2024-05-26)
+
+
+### Features
+
+* add sha256 signatures to outgoing http requests ([#2874](https://github.com/jmdunsing/postal/issues/2874)) ([96d7365](https://github.com/jmdunsing/postal/commit/96d73653d7cb4dde1fbe74ccb3596147ef8cd9ed))
+* automatically remove queued messages with stale locks ([#2872](https://github.com/jmdunsing/postal/issues/2872)) ([d84152e](https://github.com/jmdunsing/postal/commit/d84152eb5df6f963426d6ba8d02d39b3c146c8a5))
+* openid connect support ([#2873](https://github.com/jmdunsing/postal/issues/2873)) ([5ed94f6](https://github.com/jmdunsing/postal/commit/5ed94f6f855735aa00544b2574dfb9e65d559a38))
+* **prometheus:** add `postal_message_queue_latency` metric ([ee8d829](https://github.com/jmdunsing/postal/commit/ee8d829a854f91e476167869cafe35c2d37bb314))
+* **worker:** allow number of threads to be configured ([7e2accc](https://github.com/jmdunsing/postal/commit/7e2acccd1ebd80750a3ebdb96cb5c36b5263cc24))
+* **worker:** scale connection pool with worker threads ([ea542a0](https://github.com/jmdunsing/postal/commit/ea542a0694b3465b04fd3ebc439837df414deb1e))
+
+
+### Bug Fixes
+
+* don't override paths in dockerfile ([9399e32](https://github.com/jmdunsing/postal/commit/9399e3223467cdacd010e70b58ad6093e128213d))
+* don't use authentication on org & server deletion ([be45652](https://github.com/jmdunsing/postal/commit/be456523dd3aacb5c3eb45c9261da97ebffe603c))
+* fixes `postal default-dkim-record` ([58dddeb](https://github.com/jmdunsing/postal/commit/58dddebeb81dc6fab945d2b10a91588eddc471c2))
+* **legacy-api:** allow _expansions to be provided as true to return all expansions ([39f704c](https://github.com/jmdunsing/postal/commit/39f704c256fc3e71a1dc009acc77796a1efffead)), closes [#2932](https://github.com/jmdunsing/postal/issues/2932)
+* **message-dequeuer:** ability to disable batching ([4fcb9e9](https://github.com/jmdunsing/postal/commit/4fcb9e9a2e34be5aa4bdf13f0529f40e564b72b4))
+* **smtp-sender:** ensure relays without a host are excluded ([3a56ec8](https://github.com/jmdunsing/postal/commit/3a56ec8a74950e0162d98f1af5f58a67a82d6455))
+* **smtp-sender:** fixes `SMTPSender.smtp_relays` ([b3264b9](https://github.com/jmdunsing/postal/commit/b3264b942776e254d3c351c94c435d172a514e18))
+* **smtp-server:** add additional information to cram-md5 log entries ([9982bb8](https://github.com/jmdunsing/postal/commit/9982bb8c31ee4885d188666e2e8afdc218528df7))
+* **smtp-server:** fixes proxy protocol ([9240612](https://github.com/jmdunsing/postal/commit/92406129cfcf1a06499a6f5aa18c73f1d6195793))
+
+
+### Styles
+
+* **rubocop:** Style/TrailingCommaInArrayLiteral ([4e13577](https://github.com/jmdunsing/postal/commit/4e13577891dc827244abc6bf6d9ab4ee45860556))
+
+
+### Miscellaneous Chores
+
+* allow config location message to be suppressed ([f760cdb](https://github.com/jmdunsing/postal/commit/f760cdb5a1d53e9c30ee495d129cbf12603a3cbd))
+* **config-docs:** update docs for latest oidc defaults ([364eba6](https://github.com/jmdunsing/postal/commit/364eba6c5fce2f08a36489f42856ad5024a2062c))
+* **config-docs:** update proxy protocol to mention v1 ([45dd8aa](https://github.com/jmdunsing/postal/commit/45dd8aaac56f15481cb7bf9081401cb28dc1e707))
+* **container:** add the branch name to the container ([bee5098](https://github.com/jmdunsing/postal/commit/bee509832edc151d97fe5bfc48c4973452873fc8))
+* **github-actions:** don't generate commit- tags ([d65bbe0](https://github.com/jmdunsing/postal/commit/d65bbe0579037c5df962a18134bc007f5159d7e5))
+* **github-actions:** don't run for dependabot or release-please PRs and fetch whole repo ([adaf2b0](https://github.com/jmdunsing/postal/commit/adaf2b07502e9ed91290873ad8465051c6fd814f))
+* **github-actions:** include a version string on branch-*/latest images ([64bc7dc](https://github.com/jmdunsing/postal/commit/64bc7dcf7c0a8e006ab6eb6e8b4a52ad5e7e6528))
+* hide further config messages ([1c67f72](https://github.com/jmdunsing/postal/commit/1c67f72209c93404d7024ce3d15f6f54f2d707c4))
+* **main:** release 3.0.0 ([#20](https://github.com/jmdunsing/postal/issues/20)) ([b415e45](https://github.com/jmdunsing/postal/commit/b415e45c7247e76624a34e387a4f99519d34b455))
+* **main:** release 3.0.0 ([#24](https://github.com/jmdunsing/postal/issues/24)) ([e718278](https://github.com/jmdunsing/postal/commit/e71827851a985b2bee20272826d4f8fe0ef273b0))
+* **main:** release 3.0.1 ([#21](https://github.com/jmdunsing/postal/issues/21)) ([33986b2](https://github.com/jmdunsing/postal/commit/33986b211e5b71103eb6d0270bf3c1dd2ff780c9))
+* **main:** release 3.1.1 ([#2859](https://github.com/jmdunsing/postal/issues/2859)) ([4c27bae](https://github.com/jmdunsing/postal/commit/4c27baee7ff554097c4a982c289dbbd4edc9db7a))
+* **main:** release 3.2.0 ([#2867](https://github.com/jmdunsing/postal/issues/2867)) ([8e71dd0](https://github.com/jmdunsing/postal/commit/8e71dd0232fbd12cbe9762877192cf0d0e37f359))
+* **main:** release 3.2.1 ([#2877](https://github.com/jmdunsing/postal/issues/2877)) ([144af20](https://github.com/jmdunsing/postal/commit/144af20b9c3b66f42d78a2d3e3b2bbdcb11a315a))
+* **main:** release 3.2.2 ([#2878](https://github.com/jmdunsing/postal/issues/2878)) ([6a1ff56](https://github.com/jmdunsing/postal/commit/6a1ff56fe269e5ace18de9fe88094a5afc87eaac))
+* **main:** release 3.3.0 ([#2887](https://github.com/jmdunsing/postal/issues/2887)) ([eded789](https://github.com/jmdunsing/postal/commit/eded789c37fd0a82056e6c1919fd808ae82154f2))
+* **main:** release 3.3.1 ([#2890](https://github.com/jmdunsing/postal/issues/2890)) ([a3fab36](https://github.com/jmdunsing/postal/commit/a3fab36da2e005fff46c0966c9b9fe7db5ee15ff))
+* **main:** release 3.3.2 ([#2892](https://github.com/jmdunsing/postal/issues/2892)) ([c12f30e](https://github.com/jmdunsing/postal/commit/c12f30e300bba70e36eb196aa63af0f02d48a0af))
+* **main:** release 3.3.3 ([#2933](https://github.com/jmdunsing/postal/issues/2933)) ([d510499](https://github.com/jmdunsing/postal/commit/d5104991903d42563c6c6f7ff01276d496e3304f))
+* regenerate config docs ([5d8213a](https://github.com/jmdunsing/postal/commit/5d8213a98735f07fdf1700c7d01597654f41dbd0))
+* suppress config location on default-dkim-record ([aa76aae](https://github.com/jmdunsing/postal/commit/aa76aae2322af41af1bd60cfe1d69a11ac76324e))
+* **ui:** display branch in footer if present ([1823617](https://github.com/jmdunsing/postal/commit/18236171ebc398c157f2e61b15c7df9f91205284))
+* update release please manifest json ([c261ffd](https://github.com/jmdunsing/postal/commit/c261ffd9c2dd10ddde1a26eeda821e7c550f6192))
+
+
+### Code Refactoring
+
+* remove moonrope but maintain legacy API actions ([#2889](https://github.com/jmdunsing/postal/issues/2889)) ([4d9654d](https://github.com/jmdunsing/postal/commit/4d9654dac47d59c760be96388d0421de74d3e6ac))
+* **versioning:** improve how current version and branch is determined and set ([07c6b31](https://github.com/jmdunsing/postal/commit/07c6b317f2b9dc04b6a8c88df1e6aa9e54597504))
+
+
+### Tests
+
+* add tests for the legacy API ([3d208d6](https://github.com/jmdunsing/postal/commit/3d208d632f4fc8a4adbfdb2bf4b377271eae6692))
+* **smtp-sender:** add more tests for AUTH LOGIN ([22dcd49](https://github.com/jmdunsing/postal/commit/22dcd4901f188915cf4b3c758c6f2fc637a4e1e3))
+
 ## [3.0.0](https://github.com/jmdunsing/postal/compare/v3.3.3...3.0.0) (2024-05-26)
 
 
