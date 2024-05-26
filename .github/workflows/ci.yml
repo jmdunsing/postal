@@ -8,8 +8,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     outputs:
       release_created: ${{ steps.release-please.outputs.release_created }}
-      tag_name: ${{ steps.release-please.outputs.tag_name }} # e.g. v1.0.0
-      version: ${{ steps.release-please.outputs.version }} # e.g. 1.0.0
+      #tag_name: ${{ steps.release-please.outputs.tag_name }} # e.g. v1.0.0
+      tag_name: v3.3.3
+      #version: ${{ steps.release-please.outputs.version }} # e.g. 1.0.0
+      version: 3.3.3
       all: ${{ toJSON(steps.release-please.outputs) }}
     steps:
       - uses: google-github-actions/release-please-action@v3
@@ -80,7 +82,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: info
         run: |
-          IMAGE=ghcr.io/postalserver/postal
+          IMAGE=ghcr.io/jmdunsing/postal
 
           REF="${GITHUB_REF#refs/heads/}"
           if [ -z "$REF" ]; then exit 1; fi
